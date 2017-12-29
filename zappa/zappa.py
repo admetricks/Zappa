@@ -460,6 +460,11 @@ class Zappa(object):
             installed_packages_name_set = [package.project_name.lower() for package in
                                            pip.get_installed_distributions() if package.project_name in package_to_keep or
                                            package.location in [site_packages, site_packages_64]]
+
+            installed_packages_version_set = [package.version for package in
+                                           pip.get_installed_distributions() if package.project_name in package_to_keep or
+                                           package.location in [site_packages, site_packages_64]]
+
             # First, try lambda packages
             for name, details in lambda_packages.items():
                 if name.lower() in installed_packages_name_set:
@@ -476,9 +481,9 @@ class Zappa(object):
             # Then try to use manylinux packages from PyPi..
             # Related: https://github.com/Miserlou/Zappa/issues/398
             try:
-                for installed_package_name in installed_packages_name_set:
+                for i, installed_package_name in enumerate(installed_packages_name_set):
                     if installed_package_name not in lambda_packages:
-                        wheel_url = self.get_manylinux_wheel(installed_package_name)
+                        wheel_url = self.get_manylinux_wheel('{}/{}'.format(installed_package_name, installed_packages_version_set[i]))
                         if wheel_url:
                             resp = requests.get(wheel_url, timeout=2, stream=True)
                             resp.raw.decode_content = True
